@@ -60,6 +60,7 @@ export default function AulasCursoPage() {
   const [modoFoco, setModoFoco] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadingAula, setLoadingAula] = useState(false);
+  const [erroAula, setErroAula] = useState<string | null>(null);
   const [gerando, setGerando] = useState(false);
   const [semanaAberta, setSemanaAberta] = useState<number | null>(null);
   const [sidebarAberta, setSidebarAberta] = useState(true);
@@ -182,6 +183,12 @@ export default function AulasCursoPage() {
         res = await apiFetch(`/api/aulas/cursos/${cursoId}/aulas/${aula.id}`);
       }
       const data = await res.json();
+      if (!res.ok) {
+        console.error("Erro ao carregar aula:", res.status, data);
+        setErroAula(data.error || `Erro ${res.status} ao carregar aula`);
+        return;
+      }
+      setErroAula(null);
       const aulaRetornada = data.aula ?? null;
       setAulaAtiva(aulaRetornada);
       setAbaConteudo("aula");
@@ -607,6 +614,17 @@ export default function AulasCursoPage() {
               ) : (
                 <p className="text-[#94A3B8] text-sm">Carregando aula...</p>
               )}
+            </div>
+          </div>
+        ) : erroAula ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center max-w-sm px-6">
+              <AlertCircle size={48} className="mx-auto text-red-400 mb-4" />
+              <h3 className="text-lg font-semibold text-white mb-2">Erro ao carregar aula</h3>
+              <p className="text-[#94A3B8] text-sm mb-4">{erroAula}</p>
+              <button onClick={() => setErroAula(null)} className="px-4 py-2 rounded-lg bg-[#1E293B] text-[#94A3B8] text-sm border border-slate-600 hover:border-slate-500">
+                Tentar novamente
+              </button>
             </div>
           </div>
         ) : !aulaAtiva ? (
