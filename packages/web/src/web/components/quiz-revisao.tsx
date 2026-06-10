@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import {
-import { apiFetch } from "../lib/api";
   X, Loader2, CheckCircle2, XCircle, ChevronRight,
   Trophy, RotateCcw, AlertCircle
 } from "lucide-react";
+import { apiFetch } from "../lib/api";
 
 type Alternativas = { A: string; B: string; C: string; D: string; E: string };
 type GabaritoComentado = {

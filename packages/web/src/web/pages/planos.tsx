@@ -1,9 +1,9 @@
 import { useEffect, useState, useRef } from "react";
 import {
-import { apiFetch } from "../lib/api";
   Crown, Check, Zap, BookOpen, Brain, BarChart2,
   RefreshCw, Loader2, AlertCircle, Lock, CreditCard, X
 } from "lucide-react";
+import { apiFetch } from "../lib/api";
 
 type Plano = "free" | "pro_mensal" | "pro_anual";
 type StatusAssinatura = {

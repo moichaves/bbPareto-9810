@@ -2,10 +2,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useState, useEffect } from "react";
 import {
-import { apiFetch } from "../lib/api";
   BookOpen, Brain, CheckCircle2, Target, Zap, ChevronRight,
   LayoutDashboard, TrendingUp, BarChart2, Award, HelpCircle, Clock, Flame,
 } from "lucide-react";
+import { apiFetch } from "../lib/api";
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 

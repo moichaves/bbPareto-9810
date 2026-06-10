@@ -1,9 +1,9 @@
 import { useState } from "react";
 import {
-import { apiFetch } from "../lib/api";
   X, CheckCircle2, XCircle, ChevronRight, ChevronLeft,
   RotateCcw, Trophy, Loader2, BookOpen, AlertCircle
 } from "lucide-react";
+import { apiFetch } from "../lib/api";
 
 // ── Tipos ────────────────────────────────────────────────────────
 interface Alternativas {

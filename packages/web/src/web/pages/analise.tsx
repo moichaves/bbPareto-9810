@@ -2,7 +2,6 @@ import { useParams, useLocation } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useRef } from "react";
 import {
-import { apiFetch } from "../lib/api";
   BarChart3,
   Calendar,
   ChevronLeft,
@@ -13,6 +12,7 @@ import { apiFetch } from "../lib/api";
   Download,
   Loader2,
 } from "lucide-react";
+import { apiFetch } from "../lib/api";
 
 type Assunto = {
   id: number;
