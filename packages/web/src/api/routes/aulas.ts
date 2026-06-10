@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { db } from "../database/index";
 import * as schema from "../database/schema";
-import { eq, desc, asc, inArray, and, count, gte } from "drizzle-orm";
+import { eq, desc, asc, inArray, and, count, gte, ne } from "drizzle-orm";
 import { analisarComGemini } from "../lib/gemini";
 import { agendarRevisoes } from "./revisoes";
 import { authMiddleware, requireAuth } from "../middleware/auth";
@@ -951,4 +951,91 @@ RESPONDA APENAS com JSON válido neste formato (sem markdown, sem explicações)
         pctAcerto: totalRespostas > 0 ? Math.round((totalAcertos / totalRespostas) * 100) : null,
       },
     }, 200);
+  });
+
+// POST /cursos/:id/reagendar-dia — redistribui aulas não concluídas de um dia para os próximos
+aulasRoutes
+  .post("/cursos/:id/reagendar-dia", async (c) => {
+    const cursoId = parseInt(c.req.param("id"));
+    const userId = c.get("user").id;
+    const { semana, diaSemana } = await c.req.json() as { semana: number; diaSemana: string };
+
+    // Ownership
+    const [curso] = await db.select().from(schema.cursosAula)
+      .where(and(eq(schema.cursosAula.id, cursoId), eq(schema.cursosAula.userId, userId)));
+    if (!curso) return c.json({ error: "Curso não encontrado" }, 404);
+
+    // Aulas do dia que não foram concluídas
+    const aulasParaReagendar = await db.select()
+      .from(schema.aulas)
+      .where(and(
+        eq(schema.aulas.cursoId, cursoId),
+        eq(schema.aulas.semana, semana),
+        eq(schema.aulas.diaSemana, diaSemana),
+        ne(schema.aulas.status, "concluida")
+      ));
+
+    if (aulasParaReagendar.length === 0) {
+      return c.json({ message: "Nenhuma aula para reagendar", reagendadas: 0 });
+    }
+
+    // Todas as aulas do curso ordenadas
+    const todasAulas = await db.select()
+      .from(schema.aulas)
+      .where(eq(schema.aulas.cursoId, cursoId))
+      .orderBy(asc(schema.aulas.ordem));
+
+    const DIAS_ORDEM = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+
+    // Encontrar dias futuros disponíveis (mesma semana depois, ou semanas seguintes)
+    // Conta aulas por (semana, dia) excluindo as que vamos mover
+    const idsReagendar = new Set(aulasParaReagendar.map(a => a.id));
+    const aulasPorSlot: Record<string, number> = {};
+    for (const a of todasAulas) {
+      if (idsReagendar.has(a.id)) continue;
+      const key = `${a.semana}-${a.diaSemana}`;
+      aulasPorSlot[key] = (aulasPorSlot[key] ?? 0) + 1;
+    }
+
+    // Gera sequência de slots futuros: a partir do dia seguinte na mesma semana,
+    // depois semanas seguintes, até encontrar vagas para todas as aulas
+    const diaAtualIdx = DIAS_ORDEM.indexOf(diaSemana);
+    const slotsOrdenados: Array<{ semana: number; dia: string }> = [];
+    const maxSemana = Math.max(...todasAulas.map(a => a.semana ?? 1));
+
+    for (let s = semana; s <= maxSemana + 1; s++) {
+      const startDia = s === semana ? diaAtualIdx + 1 : 0;
+      for (let d = startDia; d < DIAS_ORDEM.length; d++) {
+        slotsOrdenados.push({ semana: s, dia: DIAS_ORDEM[d] });
+      }
+    }
+
+    // Atribuir cada aula ao próximo slot com capacidade (máx 2 por dia)
+    const MAX_POR_DIA = 2;
+    const novasAtribuicoes: Array<{ id: number; semana: number; diaSemana: string }> = [];
+
+    for (const aula of aulasParaReagendar) {
+      for (const slot of slotsOrdenados) {
+        const key = `${slot.semana}-${slot.dia}`;
+        const atual = aulasPorSlot[key] ?? 0;
+        if (atual < MAX_POR_DIA) {
+          aulasPorSlot[key] = atual + 1;
+          novasAtribuicoes.push({ id: aula.id, semana: slot.semana, diaSemana: slot.dia });
+          break;
+        }
+      }
+    }
+
+    // Atualizar no banco
+    for (const { id, semana: novaSemana, diaSemana: novoDia } of novasAtribuicoes) {
+      await db.update(schema.aulas)
+        .set({ semana: novaSemana, diaSemana: novoDia })
+        .where(eq(schema.aulas.id, id));
+    }
+
+    return c.json({
+      message: `${novasAtribuicoes.length} aula(s) reagendada(s)`,
+      reagendadas: novasAtribuicoes.length,
+      detalhes: novasAtribuicoes,
+    });
   });

@@ -5,7 +5,7 @@ import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import {
   BookOpen, Loader2, ChevronRight, ChevronLeft, CheckCircle2, Clock,
-  AlertCircle, ChevronDown, ChevronUp, BookMarked, Upload, FileText, X, FolderOpen, Sparkles, Timer, Youtube, Maximize2, Minimize2, Lock, Zap, Network
+  AlertCircle, ChevronDown, ChevronUp, BookMarked, Upload, FileText, X, FolderOpen, Sparkles, Timer, Youtube, Maximize2, Minimize2, Lock, Zap, Network, RefreshCw
 } from "lucide-react";
 import { MapaMental } from "../components/mapa-mental";
 
@@ -61,6 +61,7 @@ export default function AulasCursoPage() {
   const [loading, setLoading] = useState(true);
   const [loadingAula, setLoadingAula] = useState(false);
   const [erroAula, setErroAula] = useState<string | null>(null);
+  const [reagendando, setReagendando] = useState<string | null>(null); // "semana-dia"
   const [gerando, setGerando] = useState(false);
   const [semanaAberta, setSemanaAberta] = useState<number | null>(null);
   const [sidebarAberta, setSidebarAberta] = useState(true);
@@ -199,6 +200,30 @@ export default function AulasCursoPage() {
       contentRef.current?.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setLoadingAula(false);
+    }
+  }
+
+  // Reagendar todas as aulas não concluídas de um dia para os próximos disponíveis
+  async function reagendarDia(semana: number, diaSemana: string) {
+    const key = `${semana}-${diaSemana}`;
+    setReagendando(key);
+    try {
+      const res = await apiFetch(`/api/aulas/cursos/${cursoId}/reagendar-dia`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ semana, diaSemana }),
+      });
+      const data = await res.json();
+      if (!res.ok) { alert(data.error || "Erro ao reagendar"); return; }
+      // Atualizar lista de aulas local com os novos dias/semanas
+      if (data.detalhes?.length) {
+        setAulas(prev => prev.map(a => {
+          const novo = data.detalhes.find((d: any) => d.id === a.id);
+          return novo ? { ...a, semana: novo.semana, diaSemana: novo.diaSemana } : a;
+        }));
+      }
+    } finally {
+      setReagendando(null);
     }
   }
 
@@ -522,47 +547,77 @@ export default function AulasCursoPage() {
                         )}
                       </button>
 
-                      {aberta && (
-                        <div>
-                          {aulasSemanais.map((aula) => {
-                            const isAtiva = aulaAtiva?.id === aula.id;
-                            const isConcluida = aula.status === "concluida";
-                            const isPendente = aula.status === "pendente";
-
-                            return (
-                              <button
-                                key={aula.id}
-                                onClick={() => abrirAula(aula)}
-                                className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-colors border-l-2 ${
-                                  isAtiva
-                                    ? "bg-[#1E3A8A]/40 border-[#F59E0B]"
-                                    : "border-transparent hover:bg-[#334155]/50"
-                                }`}
-                              >
-                                <div className="mt-0.5 shrink-0">
-                                  {isConcluida ? (
-                                    <CheckCircle2 size={14} className="text-emerald-400" />
-                                  ) : isPendente ? (
-                                    <Sparkles size={14} className="text-violet-400" />
-                                  ) : (
-                                    <Clock size={14} className="text-[#475569]" />
-                                  )}
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                  <p className={`text-xs leading-snug ${isAtiva ? "text-white font-medium" : isConcluida ? "text-[#94A3B8]" : "text-[#CBD5E1]"}`}>
-                                    {aula.assunto}
-                                  </p>
-                                  {aula.diaSemana && (
-                                    <p className={`text-[10px] mt-0.5 ${isPendente ? "text-violet-500" : "text-[#475569]"}`}>
-                                      {aula.diaSemana}{isPendente ? " · gerar ao abrir" : ""}
-                                    </p>
-                                  )}
-                                </div>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
+                      {aberta && (() => {
+                          const DIAS_ORDEM = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"];
+                          const diasDaSemana = DIAS_ORDEM.filter(d => aulasSemanais.some(a => a.diaSemana === d));
+                          return (
+                            <div>
+                              {diasDaSemana.map((dia) => {
+                                const aulasDoDia = aulasSemanais.filter(a => a.diaSemana === dia);
+                                const todasConcluidas = aulasDoDia.every(a => a.status === "concluida");
+                                const algumaNaoConcluida = aulasDoDia.some(a => a.status !== "concluida");
+                                const keyReagend = `${sem}-${dia}`;
+                                const isReagendando = reagendando === keyReagend;
+                                return (
+                                  <div key={dia}>
+                                    {/* Header do dia */}
+                                    <div className="flex items-center justify-between px-4 py-1.5 bg-[#0F172A]/60">
+                                      <span className={`text-[10px] font-semibold uppercase tracking-wider ${todasConcluidas ? "text-emerald-500" : "text-[#475569]"}`}>
+                                        {dia}
+                                      </span>
+                                      {algumaNaoConcluida && (
+                                        <button
+                                          onClick={() => reagendarDia(sem, dia)}
+                                          disabled={isReagendando}
+                                          title="Reagendar aulas não concluídas para os próximos dias"
+                                          className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] text-[#475569] hover:text-amber-400 hover:bg-[#1E293B] transition-colors disabled:opacity-50"
+                                        >
+                                          {isReagendando ? <Loader2 size={9} className="animate-spin" /> : <RefreshCw size={9} />}
+                                          Reagendar
+                                        </button>
+                                      )}
+                                    </div>
+                                    {/* Aulas do dia */}
+                                    {aulasDoDia.map((aula) => {
+                                      const isAtiva = aulaAtiva?.id === aula.id;
+                                      const isConcluida = aula.status === "concluida";
+                                      const isPendente = aula.status === "pendente";
+                                      return (
+                                        <button
+                                          key={aula.id}
+                                          onClick={() => abrirAula(aula)}
+                                          className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-colors border-l-2 ${
+                                            isAtiva
+                                              ? "bg-[#1E3A8A]/40 border-[#F59E0B]"
+                                              : "border-transparent hover:bg-[#334155]/50"
+                                          }`}
+                                        >
+                                          <div className="mt-0.5 shrink-0">
+                                            {isConcluida ? (
+                                              <CheckCircle2 size={14} className="text-emerald-400" />
+                                            ) : isPendente ? (
+                                              <Sparkles size={14} className="text-violet-400" />
+                                            ) : (
+                                              <Clock size={14} className="text-[#475569]" />
+                                            )}
+                                          </div>
+                                          <div className="min-w-0 flex-1">
+                                            <p className={`text-xs leading-snug ${isAtiva ? "text-white font-medium" : isConcluida ? "text-[#94A3B8]" : "text-[#CBD5E1]"}`}>
+                                              {aula.assunto}
+                                            </p>
+                                            {isPendente && (
+                                              <p className="text-[10px] mt-0.5 text-violet-500">gerar ao abrir</p>
+                                            )}
+                                          </div>
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          );
+                        })()}
                     </div>
                   );
                 })
