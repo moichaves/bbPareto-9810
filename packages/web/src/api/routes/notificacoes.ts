@@ -2,10 +2,21 @@ import { Hono } from "hono";
 import { db } from "../database/index";
 import * as schema from "../database/schema";
 import { eq, and, lte, isNull } from "drizzle-orm";
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM_EMAIL = "Pareto Concursos <onboarding@resend.dev>";
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+});
+
+const FROM_EMAIL = `Pareto Concursos <${process.env.SMTP_USER}>`;
+
+async function sendEmail(to: string, subject: string, html: string) {
+  await transporter.sendMail({ from: FROM_EMAIL, to, subject, html });
+}
 const BASE_URL = (process.env.WEBSITE_URL ?? "http://localhost:4200").replace(/\/$/, "");
 
 // ─────────────────────────────────────────────────────────────────
@@ -285,12 +296,11 @@ async function dispararNotificacoes(): Promise<{
       }
 
       const html = gerarEmailHtml(dados, hoje);
-      await resend.emails.send({
-        from: FROM_EMAIL,
-        to: dados.userEmail,
-        subject: `📚 Seus estudos de hoje — ${dados.aulasHoje.length} aula(s) + ${dados.revisoesHoje.length} revisão(ões)`,
+      await sendEmail(
+        dados.userEmail,
+        `📚 Seus estudos de hoje — ${dados.aulasHoje.length} aula(s) + ${dados.revisoesHoje.length} revisão(ões)`,
         html,
-      });
+      );
 
       enviados++;
     } catch (err) {
@@ -366,12 +376,7 @@ export const notificacoesRoutes = new Hono()
     }
 
     const html = gerarEmailHtml(dados, hoje);
-    const res = await resend.emails.send({
-      from: FROM_EMAIL,
-      to: dados.userEmail,
-      subject: `[PREVIEW] 📚 Seus estudos de hoje`,
-      html,
-    });
+    await sendEmail(dados.userEmail, `[PREVIEW] 📚 Seus estudos de hoje`, html);
 
-    return c.json({ ok: true, emailId: (res.data as { id?: string })?.id, enviado_para: dados.userEmail });
+    return c.json({ ok: true, enviado_para: dados.userEmail });
   });

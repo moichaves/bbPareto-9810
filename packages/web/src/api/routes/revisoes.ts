@@ -7,11 +7,96 @@ import { authMiddleware, requireAuth } from "../middleware/auth";
 
 // ── Perfis de bancas (espelhado de aulas.ts) ──────────────────────────────────
 const PERFIS_BANCA: Record<string, string> = {
-  cesgranrio: `PERFIL CESGRANRIO: enunciados longos e contextualizados, cobra raciocínio (não decoreba), alternativas muito próximas diferindo em detalhe numérico ou termo técnico, peso alto em Matemática Financeira e Conhecimentos Bancários.`,
-  cespe: `PERFIL CESPE/CEBRASPE: afirmações certo/errado com detalhe errado escondido, cobra legislação na literalidade, cuidado com "sempre"/"nunca"/"somente" (generalizações quase sempre erradas).`,
-  fgv: `PERFIL FGV: casos concretos elaborados, cobra divergências doutrinárias, informativos STF/STJ dos últimos 24 meses, mistura institutos vizinhos no mesmo enunciado.`,
-  fcc: `PERFIL FCC: questões diretas, letra da lei, troca de termos técnicos semelhantes ("pode" vs "deve"), gramática normativa com peso alto.`,
-  vunesp: `PERFIL VUNESP: enunciados médios, equilibra teoria e prática, legislação vigente com alterações recentes.`,
+  cesgranrio: `
+PERFIL DA BANCA — CESGRANRIO (Banco do Brasil / Agente Comercial):
+
+ESTILO DE QUESTÃO:
+• Enunciados longos com contexto bancário real (cliente, produto, situação de atendimento)
+• Cobra raciocínio e interpretação — não decoreba nem letra da lei isolada
+• Alternativas muito próximas, diferindo em detalhe numérico, termo técnico ou condição específica
+• Nunca repete questão idêntica — adapta contexto mas mantém o conceito central
+
+HIERARQUIA DE COBRABILIDADE POR DISCIPLINA:
+
+[CRÍTICO — cai em toda prova]
+• Matemática Financeira: juros compostos, VP/VF, taxa equivalente, sistemas de amortização (SAC/PRICE), desconto simples e composto
+• Conhecimentos Bancários: produtos e serviços do BB, SFN (estrutura, CMN, BACEN, CVM), crédito, garantias, câmbio, seguros, previdência
+• Informática: Internet/segurança (phishing, ransomware, HTTPS), pacote Office (fórmulas Excel), Windows, redes básicas
+• Vendas e Negociação: técnicas de abordagem, perfil do cliente, pós-venda, CRM, gestão de carteira
+
+[IMPORTANTE — alta frequência]
+• Língua Portuguesa: interpretação de textos formais longos, concordância verbal/nominal, regência, pronomes
+• Raciocínio Lógico / Matemática: sequências, proporcionalidade, porcentagem, razão, PA/PG
+• Atualidades Mercado Financeiro: taxa Selic, câmbio, política monetária, inflação, Open Finance, PIX, crédito
+
+[NOVIDADE — alteração recente, alta chance de cair]
+• Open Finance e Open Banking: compartilhamento de dados, consentimento, regulação BACEN
+• PIX: funcionamento, chaves, limites, fraudes, DICT
+• ESG no setor bancário: conceitos, critérios, financiamentos verdes
+
+[ACESSÓRIO — estudar por último, menor frequência]
+• Inglês: vocabulário técnico bancário/financeiro, leitura de textos, falsos cognatos
+• Gramática normativa isolada (fora de contexto de texto)
+
+PEGADINHAS CLÁSSICAS CESGRANRIO:
+• Matemática Financeira: confundir taxa nominal com efetiva, mês com ano, juros simples com compostos
+• Conhecimentos Bancários: trocar atribuições de CMN × BACEN × CVM
+• Informática: confundir atalhos de teclado (Ctrl+C vs Ctrl+X), extensões de arquivo, protocolos (HTTP vs HTTPS vs FTP)
+• Vendas: "abordagem" vs "sondagem" vs "fechamento" — banca troca a etapa do processo
+• Português: sujeito oculto em período longo fazendo concordância "errar"
+
+ESTRATÉGIA DE ELABORAÇÃO:
+• Use caso concreto bancário no enunciado (cliente pedindo produto, gerente orientando, situação de venda)
+• Alternativas incorretas devem ser plausíveis — erro sutil de valor, prazo ou nome de órgão
+• Distribua dificuldade: fácil = conceito direto, médio = aplicação em contexto, difícil = exceção ou comparação entre produtos similares`,
+
+  cespe: `
+PERFIL DA BANCA — CESPE/CEBRASPE:
+• Questões de certo/errado com afirmações que parecem corretas mas têm detalhe errado escondido
+• Cobra legislação na literalidade — um advérbio trocado pode inverter o gabarito
+• Jurisprudência recente do STF/STJ tem peso alto; informativos dos últimos 12 meses são alvo frequente
+• Pegadinha clássica: "sempre", "nunca", "somente" — generalizações absolutas quase sempre erradas
+
+[CRÍTICO] Legislação específica, jurisprudência, raciocínio lógico
+[IMPORTANTE] Português (coesão, pronomes, concordância), atualidades
+[NOVIDADE] Alterações legislativas recentes, informativos STF/STJ
+[ACESSÓRIO] Teoria pura sem aplicação recente em prova`,
+
+  fgv: `
+PERFIL DA BANCA — FGV:
+• Casos concretos elaborados, exige aplicação do conhecimento em situação real
+• Cobra divergências doutrinárias e jurisprudenciais — espera saber os dois lados
+• Informativos STF/STJ dos últimos 24 meses são alvo prioritário
+• Pegadinha clássica: mistura institutos vizinhos no mesmo enunciado
+
+[CRÍTICO] Casos práticos, jurisprudência datada, correlações entre temas
+[IMPORTANTE] Doutrina majoritária vs minoritária, legislação atualizada
+[NOVIDADE] Alterações legislativas dos últimos 24 meses
+[ACESSÓRIO] Teoria pura sem aplicação em prova recente`,
+
+  fcc: `
+PERFIL DA BANCA — FCC:
+• Questões mais diretas e objetivas, cobra letra da lei com frequência
+• Português tem peso alto: gramática normativa, análise morfossintática, interpretação
+• Raciocínio Lógico: proposições, tabelas-verdade, diagramas de conjuntos
+• Pegadinha clássica: troca de termos técnicos semelhantes ("pode" vs "deve", "será" vs "poderá")
+
+[CRÍTICO] Letra da lei, gramática normativa, raciocínio lógico formal
+[IMPORTANTE] Interpretação de texto, legislação específica do cargo
+[NOVIDADE] Alterações legislativas recentes
+[ACESSÓRIO] Teoria doutrinária, divergências`,
+
+  vunesp: `
+PERFIL DA BANCA — VUNESP:
+• Equilibra teoria e prática; enunciados médios, nem muito longos nem muito curtos
+• Português: interpretação e gramática com peso equivalente
+• Raciocínio Lógico com foco em sequências e problemas aritméticos
+• Cobra legislação vigente com atenção a alterações recentes
+
+[CRÍTICO] Legislação do cargo, raciocínio lógico, português
+[IMPORTANTE] Conhecimentos específicos, informática básica
+[NOVIDADE] Legislação alterada nos últimos 12 meses
+[ACESSÓRIO] Teoria pura, doutrina isolada`,
 };
 
 function getPerfilBanca(banca: string): string {
@@ -193,46 +278,78 @@ export const revisoesRoutes = new Hono()
     // Montar contexto
     const banca = revisao.banca ?? "CESGRANRIO";
     const perfilBanca = getPerfilBanca(banca) || `Banca: ${banca}`;
-    const trechoAula = revisao.conteudoMd ? revisao.conteudoMd.slice(0, 6000) : "";
+    const trechoAula = revisao.conteudoMd ? revisao.conteudoMd.slice(0, 7000) : "";
 
-    // Dificuldade progressiva conforme o tipo de revisão (quanto mais tarde, mais difícil)
-    const nivelPorTipo: Record<string, string> = {
-      "24h": "Q1-Q4 fáceis (reforço imediato), Q5-Q8 médias, Q9-Q10 difíceis",
-      "7d":  "Q1-Q3 fáceis, Q4-Q7 médias, Q8-Q10 difíceis",
-      "30d": "Q1-Q2 fáceis, Q3-Q6 médias, Q7-Q10 difíceis",
-      "90d": "Q1-Q2 fáceis, Q3-Q5 médias, Q6-Q10 difíceis com pegadinhas de banca",
+    // Dificuldade e foco crescente por tipo de revisão
+    const configPorTipo: Record<string, { dificuldade: string; foco: string; instrucao: string }> = {
+      "24h": {
+        dificuldade: "Q1-Q5 fáceis (reforço imediato do conceito central), Q6-Q8 médias, Q9-Q10 difíceis",
+        foco: "conceito direto e definição — o candidato acabou de estudar, reforce o essencial",
+        instrucao: "Enunciados curtos e diretos. Alternativas incorretas com erros claros mas plausíveis.",
+      },
+      "7d": {
+        dificuldade: "Q1-Q3 fáceis, Q4-Q7 médias com caso concreto bancário, Q8-Q10 difíceis",
+        foco: "aplicação prática em situação real de banco — cliente, produto, atendimento",
+        instrucao: "Enunciados médios com contexto bancário (gerente, cliente, operação). Alternativas com erros sutis de prazo, taxa ou órgão regulador.",
+      },
+      "30d": {
+        dificuldade: "Q1-Q2 fáceis, Q3-Q6 médias, Q7-Q10 difíceis com alternativas muito próximas",
+        foco: "pegadinhas clássicas CESGRANRIO — alternativas que diferem em detalhe numérico ou termo técnico",
+        instrucao: "Enunciados longos e contextualizados. Pelo menos 3 questões devem ter duas alternativas extremamente próximas (ex: taxa nominal vs efetiva, CMN vs BACEN). Exija raciocínio, não decoreba.",
+      },
+      "90d": {
+        dificuldade: "Q1-Q2 fáceis, Q3-Q5 médias, Q6-Q10 difíceis com correlação entre assuntos",
+        foco: "correlação com outros assuntos da disciplina — banca mistura conceitos no mesmo enunciado",
+        instrucao: "Enunciados complexos que cruzam este assunto com temas vizinhos. Questões de análise comparativa, exceções à regra e casos-limite. Exija domínio profundo.",
+      },
     };
-    const nivelDificuldade = nivelPorTipo[revisao.tipo ?? "7d"] ?? nivelPorTipo["7d"];
 
-    const prompt = `Você é elaborador sênior de questões de concurso para o cargo "${revisao.cargo ?? "Agente Comercial"}" (banca: ${banca}).
+    const config = configPorTipo[revisao.tipo ?? "7d"] ?? configPorTipo["7d"];
+
+    const prompt = `Você é elaborador sênior de questões para o concurso Banco do Brasil, cargo "${revisao.cargo ?? "Agente Comercial"}", banca CESGRANRIO.
 
 ${perfilBanca}
 
-Gere EXATAMENTE 10 questões de múltipla escolha sobre: "${revisao.assunto}" — ${revisao.disciplina ?? ""}
-${trechoAula ? `\nBASEIE-SE no conteúdo da aula abaixo (use os conceitos, exemplos e terminologia presentes nele):\n"""\n${trechoAula}\n"""` : ""}
+ASSUNTO DA REVISÃO: "${revisao.assunto}"
+DISCIPLINA: ${revisao.disciplina ?? ""}
+TIPO DE REVISÃO: ${revisao.tipo ?? "7d"} — foco em ${config.foco}
+${trechoAula ? `\nCONTEÚDO DA AULA (base para as questões):\n"""\n${trechoAula}\n"""` : ""}
 
-REGRAS OBRIGATÓRIAS:
-- 5 alternativas (A a E), apenas 1 correta
-- Alternativas incorretas plausíveis — sem opções obviamente erradas
-- Varie o formato: definição, situação-problema, aplicação prática, interpretação de texto
-- Dificuldade progressiva: ${nivelDificuldade}
-- Use terminologia e estilo de enunciado da banca ${banca}
-- Este é uma revisão "${revisao.tipo ?? ""}" — foque em consolidar retenção e aplicação, não apenas reconhecimento
+INSTRUÇÕES DE ELABORAÇÃO:
+${config.instrucao}
 
-Retorne APENAS JSON válido, sem markdown, neste formato:
+DISTRIBUIÇÃO DE DIFICULDADE OBRIGATÓRIA:
+${config.dificuldade}
+
+REGRAS CESGRANRIO:
+- 5 alternativas (A a E), exatamente 1 correta
+- Enunciados contextualizados com situação bancária real (não abstratos)
+- Alternativas incorretas plausíveis — nunca obviamente erradas
+- Nunca repita conceito entre questões — cada questão deve testar ângulo diferente
+- Terminologia e estilo CESGRANRIO: enunciados longos, raciocínio exigido, detalhes técnicos
+
+GABARITO COMENTADO — OBRIGATÓRIO POR QUESTÃO:
+Para cada questão, o campo "gabarito_comentado" deve conter:
+- Por que a alternativa correta está certa (fundamentação técnica)
+- Por que cada alternativa incorreta está errada (erro específico de cada uma)
+- "isca_da_banca": o detalhe sutil que confunde o candidato desatento (se houver)
+
+Retorne APENAS JSON válido, sem markdown:
 [
   {
     "numero": 1,
-    "enunciado": "texto da questão",
-    "alternativas": {
-      "A": "texto",
-      "B": "texto",
-      "C": "texto",
-      "D": "texto",
-      "E": "texto"
-    },
+    "enunciado": "texto completo da questão",
+    "alternativas": { "A": "...", "B": "...", "C": "...", "D": "...", "E": "..." },
     "gabarito": "A",
-    "explicacao": "Por que a alternativa correta está certa e por que as principais erradas estão erradas"
+    "explicacao": "resumo geral da resposta correta (1-2 frases)",
+    "gabarito_comentado": {
+      "A": { "status": "CORRETA", "justificativa": "..." },
+      "B": { "status": "INCORRETA", "justificativa": "..." },
+      "C": { "status": "INCORRETA", "justificativa": "..." },
+      "D": { "status": "INCORRETA", "justificativa": "..." },
+      "E": { "status": "INCORRETA", "justificativa": "..." },
+      "isca_da_banca": "..."
+    }
   }
 ]`;
 

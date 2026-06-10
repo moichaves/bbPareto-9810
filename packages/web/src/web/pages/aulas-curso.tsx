@@ -5,8 +5,9 @@ import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import {
   BookOpen, Loader2, ChevronRight, ChevronLeft, CheckCircle2, Clock,
-  AlertCircle, ChevronDown, ChevronUp, BookMarked, Upload, FileText, X, FolderOpen, Sparkles, Timer, Youtube, Maximize2, Minimize2, Lock, Zap
+  AlertCircle, ChevronDown, ChevronUp, BookMarked, Upload, FileText, X, FolderOpen, Sparkles, Timer, Youtube, Maximize2, Minimize2, Lock, Zap, Network
 } from "lucide-react";
+import { MapaMental } from "../components/mapa-mental";
 
 import { QuizAula } from "../components/quiz-aula";
 
@@ -54,6 +55,7 @@ export default function AulasCursoPage() {
   }
   const [quizAberto, setQuizAberto] = useState(false);
   const [aulaAtiva, setAulaAtiva] = useState<AulaCompleta | null>(null);
+  const [abaConteudo, setAbaConteudo] = useState<"aula" | "mapa">("aula");
   const [modoFoco, setModoFoco] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadingAula, setLoadingAula] = useState(false);
@@ -181,6 +183,7 @@ export default function AulasCursoPage() {
       const data = await res.json();
       const aulaRetornada = data.aula ?? null;
       setAulaAtiva(aulaRetornada);
+      setAbaConteudo("aula");
       // Atualiza status na lista (pendente → gerada)
       if (aulaRetornada) {
         setAulas((prev) => prev.map((a) => a.id === aulaRetornada.id ? { ...a, status: aulaRetornada.status } : a));
@@ -688,7 +691,41 @@ export default function AulasCursoPage() {
               </div>
             </div>
 
+            {/* Tabs Aula / Mapa Mental */}
+            <div className="flex gap-1 mb-6">
+              <button
+                onClick={() => setAbaConteudo("aula")}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  abaConteudo === "aula"
+                    ? "bg-[#1E40AF] text-white"
+                    : "text-[#94A3B8] hover:bg-[#1E293B] hover:text-white"
+                }`}
+              >
+                <BookOpen size={14} />
+                Conteúdo
+              </button>
+              <button
+                onClick={() => setAbaConteudo("mapa")}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  abaConteudo === "mapa"
+                    ? "bg-[#1E40AF] text-white"
+                    : "text-[#94A3B8] hover:bg-[#1E293B] hover:text-white"
+                }`}
+              >
+                <Network size={14} />
+                Mapa Mental
+              </button>
+            </div>
+
+            {/* Mapa Mental */}
+            {abaConteudo === "mapa" && (
+              <div className="mb-8">
+                <MapaMental conteudoMd={aulaAtiva.conteudoMd} />
+              </div>
+            )}
+
             {/* Conteúdo markdown */}
+            {abaConteudo === "aula" && (
             <div className="aula-content">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
@@ -807,6 +844,7 @@ export default function AulasCursoPage() {
                 {aulaAtiva.conteudoMd}
               </ReactMarkdown>
             </div>
+            )}
 
             {/* Botão Praticar Questões */}
             <div className="mt-10 p-6 rounded-2xl border border-dashed border-slate-700 bg-[#1E293B]/50 flex items-center justify-between gap-4">

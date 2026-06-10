@@ -140,6 +140,8 @@ function AbaSimulado() {
   const [respostas, setRespostas] = useState<Record<number, Resposta>>({});
   const [respondeuAtual, setRespondeuAtual] = useState(false);
   const [mostrarExplicacao, setMostrarExplicacao] = useState(false);
+  const [analiseDetalhada, setAnaliseDetalhada] = useState<Record<number, any>>({});
+  const [loadingAnalise, setLoadingAnalise] = useState<Record<number, boolean>>({});
   const [tempoRestante, setTempoRestante] = useState(0);
   const [tempoDecorrido, setTempoDecorrido] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -229,6 +231,29 @@ function AbaSimulado() {
       setMostrarExplicacao(false);
     } else {
       finalizarSimulado();
+    }
+  }
+
+  async function buscarAnalise(q: Questao, respostaUsuario: string) {
+    if (analiseDetalhada[q.numero] || loadingAnalise[q.numero]) return;
+    setLoadingAnalise(prev => ({ ...prev, [q.numero]: true }));
+    try {
+      const r = await fetch("/api/simulado/corrigir-questao", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          enunciado: q.enunciado,
+          alternativas: q.alternativas,
+          gabarito: q.gabarito,
+          respostaUsuario,
+          assunto: q.assunto,
+          disciplina: q.disciplina,
+        }),
+      });
+      const d = await r.json();
+      if (d.ok) setAnaliseDetalhada(prev => ({ ...prev, [q.numero]: d.analise }));
+    } finally {
+      setLoadingAnalise(prev => ({ ...prev, [q.numero]: false }));
     }
   }
 
@@ -475,17 +500,79 @@ function AbaSimulado() {
                     {acertouAtual ? "Correto!" : `Incorreto — gabarito: ${q.gabarito}`}
                   </span>
                   <button
-                    onClick={() => setMostrarExplicacao(v => !v)}
+                    onClick={() => {
+                      const novoEstado = !mostrarExplicacao;
+                      setMostrarExplicacao(novoEstado);
+                      if (novoEstado && respostaAtual) {
+                        buscarAnalise(q, respostaAtual.resposta);
+                      }
+                    }}
                     className="ml-auto text-xs text-[#94A3B8] hover:text-white"
-                  >{mostrarExplicacao ? "Ocultar" : "Ver explicação"}</button>
+                  >{mostrarExplicacao ? "Ocultar" : "Ver análise"}</button>
                 </div>
               )}
 
-              {mostrarExplicacao && (
-                <div className="mt-2 p-3 bg-slate-800 rounded-xl text-sm text-[#CBD5E1] leading-relaxed">
-                  {q.explicacao}
-                </div>
-              )}
+              {mostrarExplicacao && (() => {
+                const analise = analiseDetalhada[q.numero];
+                const loading = loadingAnalise[q.numero];
+                return (
+                  <div className="mt-2 space-y-3">
+                    {loading && (
+                      <div className="p-4 bg-slate-800 rounded-xl flex items-center gap-2 text-sm text-[#94A3B8]">
+                        <Loader2 size={14} className="animate-spin" />
+                        Analisando cada alternativa...
+                      </div>
+                    )}
+
+                    {analise && !loading && (
+                      <>
+                        {/* Tese central */}
+                        <div className="p-3 bg-slate-800/60 rounded-xl border border-slate-700">
+                          <p className="text-xs text-[#64748B] uppercase font-semibold mb-1">O que esta questão testa</p>
+                          <p className="text-sm text-[#CBD5E1]">{analise.tese_central}</p>
+                        </div>
+
+                        {/* Análise alternativa por alternativa */}
+                        <div className="p-3 bg-slate-800/60 rounded-xl border border-slate-700 space-y-2">
+                          <p className="text-xs text-[#64748B] uppercase font-semibold mb-2">Análise por alternativa</p>
+                          {(Object.entries(analise.analise_alternativas) as [string, { status: string; justificativa: string }][]).map(([letra, info]) => {
+                            const isCorreta = info.status === "CORRETA";
+                            const isEscolhida = respostaAtual?.resposta === letra;
+                            return (
+                              <div key={letra} className={`flex gap-2 p-2 rounded-lg text-sm ${isCorreta ? "bg-emerald-500/10" : isEscolhida ? "bg-red-500/10" : "bg-slate-700/30"}`}>
+                                <span className={`font-bold font-mono w-5 flex-shrink-0 mt-0.5 ${isCorreta ? "text-emerald-400" : isEscolhida ? "text-red-400" : "text-[#475569]"}`}>{letra}</span>
+                                <div>
+                                  <span className={`text-xs font-semibold mr-2 ${isCorreta ? "text-emerald-400" : "text-red-400"}`}>{info.status}</span>
+                                  <span className="text-[#94A3B8] leading-relaxed">{info.justificativa}</span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Isca da banca */}
+                        <div className="p-3 bg-amber-500/10 rounded-xl border border-amber-700/40">
+                          <p className="text-xs text-amber-400 uppercase font-semibold mb-1">⚠ Isca da banca</p>
+                          <p className="text-sm text-[#CBD5E1]">{analise.isca_da_banca}</p>
+                        </div>
+
+                        {/* Lição Pareto */}
+                        <div className="p-3 bg-blue-500/10 rounded-xl border border-blue-700/40">
+                          <p className="text-xs text-blue-400 uppercase font-semibold mb-1">📌 Lição Pareto</p>
+                          <p className="text-sm text-[#CBD5E1]">{analise.licao_pareto}</p>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Fallback: explicação simples enquanto não carregou */}
+                    {!analise && !loading && (
+                      <div className="p-3 bg-slate-800 rounded-xl text-sm text-[#CBD5E1] leading-relaxed">
+                        {q.explicacao}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* Próxima */}
               {respondeuAtual && (

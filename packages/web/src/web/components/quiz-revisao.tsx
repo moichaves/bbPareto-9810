@@ -5,12 +5,21 @@ import {
 } from "lucide-react";
 
 type Alternativas = { A: string; B: string; C: string; D: string; E: string };
+type GabaritoComentado = {
+  A: { status: string; justificativa: string };
+  B: { status: string; justificativa: string };
+  C: { status: string; justificativa: string };
+  D: { status: string; justificativa: string };
+  E: { status: string; justificativa: string };
+  isca_da_banca: string;
+};
 type Questao = {
   numero: number;
   enunciado: string;
   alternativas: Alternativas;
   gabarito: string;
   explicacao: string;
+  gabarito_comentado?: GabaritoComentado;
 };
 
 type Props = {
@@ -257,22 +266,83 @@ export default function QuizRevisao({ revisaoId, assunto, tipo, onConcluir, onFe
 
               {/* Gabarito/Explicação */}
               {mostrarGabarito && (
-                <div className={`rounded-xl border p-4 ${
-                  respostas[atual] === questao.gabarito
-                    ? "border-emerald-700 bg-emerald-900/20"
-                    : "border-amber-700 bg-amber-900/20"
-                }`}>
-                  <div className="flex items-center gap-2 mb-2">
+                <div className="space-y-3">
+                  {/* Header acerto/erro */}
+                  <div className={`rounded-xl border p-3 flex items-center gap-2 ${
+                    respostas[atual] === questao.gabarito
+                      ? "border-emerald-700 bg-emerald-900/20"
+                      : "border-red-700 bg-red-900/20"
+                  }`}>
                     {respostas[atual] === questao.gabarito
-                      ? <CheckCircle2 size={16} className="text-emerald-400" />
-                      : <XCircle size={16} className="text-amber-400" />}
+                      ? <CheckCircle2 size={16} className="text-emerald-400 shrink-0" />
+                      : <XCircle size={16} className="text-red-400 shrink-0" />}
                     <span className={`text-sm font-semibold ${
-                      respostas[atual] === questao.gabarito ? "text-emerald-400" : "text-amber-400"
+                      respostas[atual] === questao.gabarito ? "text-emerald-400" : "text-red-400"
                     }`}>
-                      {respostas[atual] === questao.gabarito ? "Correto!" : `Incorreto — Gabarito: ${questao.gabarito}`}
+                      {respostas[atual] === questao.gabarito
+                        ? "Correto!"
+                        : `Incorreto — Gabarito: ${questao.gabarito}`}
                     </span>
                   </div>
-                  <p className="text-slate-300 text-sm leading-relaxed">{questao.explicacao}</p>
+
+                  {/* Gabarito comentado por alternativa */}
+                  {questao.gabarito_comentado ? (
+                    <div className="rounded-xl border border-slate-700 bg-slate-800/40 overflow-hidden">
+                      <p className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold px-4 py-2 border-b border-slate-700">
+                        Análise por alternativa
+                      </p>
+                      <div className="divide-y divide-slate-700/50">
+                        {(["A", "B", "C", "D", "E"] as const).map((letra) => {
+                          const item = questao.gabarito_comentado![letra];
+                          const isCorreta = letra === questao.gabarito;
+                          const statusLower = item.status?.toLowerCase() ?? "";
+                          const isErrada = statusLower.includes("errada") || statusLower.includes("incorreta") || statusLower.includes("falsa");
+
+                          let letraBg = "bg-slate-700 text-slate-300";
+                          let rowBg = "";
+                          if (isCorreta) {
+                            letraBg = "bg-emerald-600 text-white";
+                            rowBg = "bg-emerald-900/10";
+                          } else if (isErrada) {
+                            letraBg = "bg-red-700/70 text-red-200";
+                          }
+
+                          return (
+                            <div key={letra} className={`flex items-start gap-3 px-4 py-3 ${rowBg}`}>
+                              <span className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${letraBg}`}>
+                                {letra}
+                              </span>
+                              <div className="flex-1 min-w-0">
+                                <span className={`text-[10px] font-semibold uppercase tracking-wide ${
+                                  isCorreta ? "text-emerald-400" : isErrada ? "text-red-400" : "text-slate-400"
+                                }`}>
+                                  {item.status}
+                                </span>
+                                <p className="text-slate-300 text-xs leading-relaxed mt-0.5">{item.justificativa}</p>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Isca da banca */}
+                      {questao.gabarito_comentado.isca_da_banca && (
+                        <div className="border-t border-amber-800/50 bg-amber-900/20 px-4 py-3">
+                          <p className="text-[10px] text-amber-400 uppercase tracking-widest font-semibold mb-1">
+                            ⚠ Isca da banca
+                          </p>
+                          <p className="text-amber-200 text-xs leading-relaxed">
+                            {questao.gabarito_comentado.isca_da_banca}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    /* Fallback: explicação simples para cache antigo */
+                    <div className="rounded-xl border border-slate-700 bg-slate-800/40 p-4">
+                      <p className="text-slate-300 text-sm leading-relaxed">{questao.explicacao}</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

@@ -14,45 +14,95 @@ import { join } from "path";
 // ── Perfis de bancas conhecidas ───────────────────────────────────────────────
 const PERFIS_BANCA: Record<string, string> = {
   cesgranrio: `
-PERFIL DA BANCA — CESGRANRIO:
-• Questões com enunciados longos e contextualizados — cobra raciocínio e interpretação, não decoreba
-• Matemática Financeira e Raciocínio Lógico têm peso alto; espere cálculos com juros compostos, amortização e análise de investimentos
-• Língua Portuguesa foca em interpretação de textos formais e norma culta; raramente cobra gramática isolada
-• Conhecimentos Bancários: produtos e serviços financeiros, mercado de capitais, regulamentação do SFN
-• Atualidades do mercado financeiro: Banco Central, BACEN, taxa Selic, política monetária
-• Raramente repete questões idênticas — adapta o contexto mas mantém o conceito cobrado
-• Pegadinha clássica: alternativas muito próximas que diferem apenas em detalhe numérico ou termo técnico
-• Valoriza candidatos que entendem o "porquê" da resposta, não apenas o "o quê"`,
+PERFIL DA BANCA — CESGRANRIO (Banco do Brasil / Agente Comercial):
+
+ESTILO DE QUESTÃO:
+• Enunciados longos com contexto bancário real (cliente, produto, situação de atendimento)
+• Cobra raciocínio e interpretação — não decoreba nem letra da lei isolada
+• Alternativas muito próximas, diferindo em detalhe numérico, termo técnico ou condição específica
+• Nunca repete questão idêntica — adapta contexto mas mantém o conceito central
+
+HIERARQUIA DE COBRABILIDADE POR DISCIPLINA:
+
+[CRÍTICO — cai em toda prova]
+• Matemática Financeira: juros compostos, VP/VF, taxa equivalente, sistemas de amortização (SAC/PRICE), desconto simples e composto
+• Conhecimentos Bancários: produtos e serviços do BB, SFN (estrutura, CMN, BACEN, CVM), crédito, garantias, câmbio, seguros, previdência
+• Informática: Internet/segurança (phishing, ransomware, HTTPS), pacote Office (fórmulas Excel), Windows, redes básicas
+• Vendas e Negociação: técnicas de abordagem, perfil do cliente, pós-venda, CRM, gestão de carteira
+
+[IMPORTANTE — alta frequência]
+• Língua Portuguesa: interpretação de textos formais longos, concordância verbal/nominal, regência, pronomes
+• Raciocínio Lógico / Matemática: sequências, proporcionalidade, porcentagem, razão, PA/PG
+• Atualidades Mercado Financeiro: taxa Selic, câmbio, política monetária, inflação, Open Finance, PIX, crédito
+
+[NOVIDADE — alteração recente, alta chance de cair]
+• Open Finance e Open Banking: compartilhamento de dados, consentimento, regulação BACEN
+• PIX: funcionamento, chaves, limites, fraudes, DICT
+• ESG no setor bancário: conceitos, critérios, financiamentos verdes
+
+[ACESSÓRIO — estudar por último, menor frequência]
+• Inglês: vocabulário técnico bancário/financeiro, leitura de textos, falsos cognatos
+• Gramática normativa isolada (fora de contexto de texto)
+
+PEGADINHAS CLÁSSICAS CESGRANRIO:
+• Matemática Financeira: confundir taxa nominal com efetiva, mês com ano, juros simples com compostos
+• Conhecimentos Bancários: trocar atribuições de CMN × BACEN × CVM
+• Informática: confundir atalhos de teclado (Ctrl+C vs Ctrl+X), extensões de arquivo, protocolos (HTTP vs HTTPS vs FTP)
+• Vendas: "abordagem" vs "sondagem" vs "fechamento" — banca troca a etapa do processo
+• Português: sujeito oculto em período longo fazendo concordância "errar"
+
+ESTRATÉGIA DE ELABORAÇÃO:
+• Use caso concreto bancário no enunciado (cliente pedindo produto, gerente orientando, situação de venda)
+• Alternativas incorretas devem ser plausíveis — erro sutil de valor, prazo ou nome de órgão
+• Distribua dificuldade: fácil = conceito direto, médio = aplicação em contexto, difícil = exceção ou comparação entre produtos similares`,
 
   cespe: `
 PERFIL DA BANCA — CESPE/CEBRASPE:
-• Questões de certo/errado com afirmações que parecem corretas mas têm um detalhe errado
+• Questões de certo/errado com afirmações que parecem corretas mas têm detalhe errado escondido
 • Cobra legislação na literalidade — um advérbio trocado pode inverter o gabarito
 • Jurisprudência recente do STF/STJ tem peso alto; informativos dos últimos 12 meses são alvo frequente
-• Português: foca em coesão, coerência e análise sintática; cuidado com pronomes e concordância
-• Pegadinha clássica: "sempre", "nunca", "somente" — generalizações absolutas quase sempre estão erradas`,
+• Pegadinha clássica: "sempre", "nunca", "somente" — generalizações absolutas quase sempre erradas
+
+[CRÍTICO] Legislação específica, jurisprudência, raciocínio lógico
+[IMPORTANTE] Português (coesão, pronomes, concordância), atualidades
+[NOVIDADE] Alterações legislativas recentes, informativos STF/STJ
+[ACESSÓRIO] Teoria pura sem aplicação recente em prova`,
 
   fgv: `
 PERFIL DA BANCA — FGV:
-• Questões com casos concretos elaborados, exige aplicação do conhecimento em situação real
+• Casos concretos elaborados, exige aplicação do conhecimento em situação real
 • Cobra divergências doutrinárias e jurisprudenciais — espera saber os dois lados
 • Informativos STF/STJ dos últimos 24 meses são alvo prioritário
-• Português: interpretação de textos longos, crase e regência são recorrentes
-• Pegadinha clássica: mistura institutos vizinhos no mesmo enunciado`,
+• Pegadinha clássica: mistura institutos vizinhos no mesmo enunciado
+
+[CRÍTICO] Casos práticos, jurisprudência datada, correlações entre temas
+[IMPORTANTE] Doutrina majoritária vs minoritária, legislação atualizada
+[NOVIDADE] Alterações legislativas dos últimos 24 meses
+[ACESSÓRIO] Teoria pura sem aplicação em prova recente`,
 
   fcc: `
 PERFIL DA BANCA — FCC:
 • Questões mais diretas e objetivas, cobra letra da lei com frequência
-• Português tem peso alto; gramática normativa, análise morfossintática e interpretação
+• Português tem peso alto: gramática normativa, análise morfossintática, interpretação
 • Raciocínio Lógico: proposições, tabelas-verdade, diagramas de conjuntos
-• Pegadinha clássica: troca de termos técnicos semelhantes (ex: "pode" vs "deve")`,
+• Pegadinha clássica: troca de termos técnicos semelhantes ("pode" vs "deve", "será" vs "poderá")
+
+[CRÍTICO] Letra da lei, gramática normativa, raciocínio lógico formal
+[IMPORTANTE] Interpretação de texto, legislação específica do cargo
+[NOVIDADE] Alterações legislativas recentes
+[ACESSÓRIO] Teoria doutrinária, divergências`,
 
   vunesp: `
 PERFIL DA BANCA — VUNESP:
 • Equilibra teoria e prática; enunciados médios, nem muito longos nem muito curtos
 • Português: interpretação e gramática com peso equivalente
 • Raciocínio Lógico com foco em sequências e problemas aritméticos
-• Cobra legislação vigente com atenção a alterações recentes`,
+• Cobra legislação vigente com atenção a alterações recentes
+
+[CRÍTICO] Legislação do cargo, raciocínio lógico, português
+[IMPORTANTE] Conhecimentos específicos, informática básica
+[NOVIDADE] Legislação alterada nos últimos 12 meses
+[ACESSÓRIO] Teoria pura, doutrina isolada`,
 };
 
 function getPerfilBanca(banca: string): string {
@@ -156,6 +206,19 @@ Responda em Markdown com EXATAMENTE estas seções, nesta ordem:
 **Resolução passo a passo:**
 [Resolução didática mostrando o raciocínio, não apenas o resultado]
 **Resposta:** [letra e justificativa em 1 linha]
+
+## 🗺 Mapa Mental
+
+[Estrutura hierárquica do assunto em texto. Use indentação com • e ◦ para os níveis. Máximo 3 níveis de profundidade. Seja conciso — cada nó deve ter no máximo 5 palavras. Inclua os conceitos centrais, subdivisões importantes e conexões-chave com outros tópicos da prova. Exemplo de formato:
+
+• CONCEITO CENTRAL
+  ◦ Subcategoria A
+    - Detalhe 1
+    - Detalhe 2
+  ◦ Subcategoria B
+    - Detalhe 3
+
+Gere o mapa real para "${assunto}" seguindo esse padrão.]
 
 ## ✅ Questões de Fixação
 
