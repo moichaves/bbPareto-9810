@@ -2,6 +2,7 @@ import { useParams, useLocation } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useRef } from "react";
 import {
+import { apiFetch } from "../lib/api";
   BarChart3,
   Calendar,
   ChevronLeft,
@@ -299,7 +300,7 @@ export default function AnalisePage() {
   const { data: statusData } = useQuery<{ id: number; status: string; erroMsg: string | null }>({
     queryKey: ["analise-status", id],
     queryFn: async () => {
-      const res = await fetch(`/api/analises/${id}/status`);
+      const res = await apiFetch(`/api/analises/${id}/status`);
       if (!res.ok) throw new Error("não encontrada");
       return res.json();
     },
@@ -312,7 +313,7 @@ export default function AnalisePage() {
   const { data, isLoading, error } = useQuery<AnaliseData>({
     queryKey: ["analise", id],
     queryFn: async () => {
-      const res = await fetch(`/api/analises/${id}`);
+      const res = await apiFetch(`/api/analises/${id}`);
       if (!res.ok) throw new Error("Análise não encontrada");
       return res.json();
     },
@@ -390,7 +391,7 @@ export default function AnalisePage() {
   const handleGerarPlano = async () => {
     setGerandoPlano(true);
     try {
-      const res = await fetch(`/api/analises/${id}/gerar-plano`, {
+      const res = await apiFetch(`/api/analises/${id}/gerar-plano`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ diasEstudo: 30, horasDia: 3 }),

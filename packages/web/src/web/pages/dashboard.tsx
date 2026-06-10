@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useState, useEffect } from "react";
 import {
+import { apiFetch } from "../lib/api";
   BookOpen, Brain, CheckCircle2, Target, Zap, ChevronRight,
   LayoutDashboard, TrendingUp, BarChart2, Award, HelpCircle, Clock, Flame,
 } from "lucide-react";
@@ -484,23 +485,23 @@ export default function DashboardPage() {
 
   const { data: revisoesHoje, isLoading: loadRev } = useQuery<{ revisoes: Revisao[] }>({
     queryKey: ["revisoes-hoje"],
-    queryFn: () => fetch("/api/revisoes/hoje").then(r => r.json()),
+    queryFn: () => apiFetch("/api/revisoes/hoje").then(r => r.json()),
     refetchInterval: 60_000,
   });
 
   const { data: aulasData, isLoading: loadAulas } = useQuery<{ cursos: any[] }>({
     queryKey: ["cursos-lista"],
-    queryFn: () => fetch("/api/aulas/cursos").then(r => r.json()),
+    queryFn: () => apiFetch("/api/aulas/cursos").then(r => r.json()),
   });
 
   const { data: revisoesTotal } = useQuery<{ revisoes: Revisao[] }>({
     queryKey: ["revisoes-proximas"],
-    queryFn: () => fetch("/api/revisoes/proximas").then(r => r.json()),
+    queryFn: () => apiFetch("/api/revisoes/proximas").then(r => r.json()),
   });
 
   const concluirRevisao = useMutation({
     mutationFn: (id: number) =>
-      fetch(`/api/revisoes/${id}/concluir`, { method: "PATCH" }),
+      apiFetch(`/api/revisoes/${id}/concluir`, { method: "PATCH" }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["revisoes-hoje"] });
       qc.invalidateQueries({ queryKey: ["revisoes-proximas"] });
@@ -509,7 +510,7 @@ export default function DashboardPage() {
 
   const concluirAula = useMutation({
     mutationFn: ({ cursoId, aulaId }: { cursoId: number; aulaId: number }) =>
-      fetch(`/api/aulas/cursos/${cursoId}/aulas/${aulaId}/status`, {
+      apiFetch(`/api/aulas/cursos/${cursoId}/aulas/${aulaId}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: "concluida" }),
@@ -525,7 +526,7 @@ export default function DashboardPage() {
   const { data: aulasHojeData } = useQuery<{ aulasHoje: AulaHoje[] }>({
     queryKey: ["aulas-hoje"],
     queryFn: async () => {
-      const cursosRes = await fetch("/api/aulas/cursos").then(r => r.json());
+      const cursosRes = await apiFetch("/api/aulas/cursos").then(r => r.json());
       const cursos = cursosRes.cursos ?? [];
       const aulasHoje: AulaHoje[] = [];
       const diaHoje = diaSemanaHoje();
@@ -533,7 +534,7 @@ export default function DashboardPage() {
       await Promise.all(
         cursos.map(async (curso: any) => {
           try {
-            const det = await fetch(`/api/aulas/cursos/${curso.id}`).then(r => r.json());
+            const det = await apiFetch(`/api/aulas/cursos/${curso.id}`).then(r => r.json());
             const aulas = det.aulas ?? [];
             const inicioMs = det.curso?.createdAt
               ? new Date(det.curso.createdAt).getTime()
@@ -564,7 +565,7 @@ export default function DashboardPage() {
 
   const { data: statsData } = useQuery<CursoStats>({
     queryKey: ["curso-stats", primeiroCursoId],
-    queryFn: () => fetch(`/api/aulas/cursos/${primeiroCursoId}/stats`).then(r => r.json()),
+    queryFn: () => apiFetch(`/api/aulas/cursos/${primeiroCursoId}/stats`).then(r => r.json()),
     enabled: !!primeiroCursoId,
     refetchInterval: 30_000,
   });

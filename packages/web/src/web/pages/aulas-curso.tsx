@@ -10,6 +10,7 @@ import {
 import { MapaMental } from "../components/mapa-mental";
 
 import { QuizAula } from "../components/quiz-aula";
+import { apiFetch } from "../lib/api";
 
 type AulaItem = {
   id: number;
@@ -90,7 +91,7 @@ export default function AulasCursoPage() {
 
   // Carregar curso + lista de aulas
   useEffect(() => {
-    fetch(`/api/aulas/cursos/${cursoId}`)
+    apiFetch(`/api/aulas/cursos/${cursoId}`)
       .then((r) => r.json())
       .then(async (d) => {
         setCurso(d.curso ?? null);
@@ -105,7 +106,7 @@ export default function AulasCursoPage() {
             setSemanaAberta(alvo.semana);
             // Carregar conteúdo
             try {
-              const res = await fetch(`/api/aulas/cursos/${cursoId}/aulas/${alvo.id}`);
+              const res = await apiFetch(`/api/aulas/cursos/${cursoId}/aulas/${alvo.id}`);
               const data = await res.json();
               setAulaAtiva(data.aula ?? null);
             } catch {}
@@ -133,8 +134,8 @@ export default function AulasCursoPage() {
     pollRef.current = setInterval(async () => {
       try {
         const [statusRes, aulasRes] = await Promise.all([
-          fetch(`/api/aulas/cursos/${cursoId}/gerar/status`).then((r) => r.json()),
-          fetch(`/api/aulas/cursos/${cursoId}`).then((r) => r.json()),
+          apiFetch(`/api/aulas/cursos/${cursoId}/gerar/status`).then((r) => r.json()),
+          apiFetch(`/api/aulas/cursos/${cursoId}`).then((r) => r.json()),
         ]);
 
         setCurso((prev) => prev ? {
@@ -170,7 +171,7 @@ export default function AulasCursoPage() {
       if (aula.status === "pendente") {
         // Gera conteúdo agora (pode demorar alguns segundos)
         setGerando(true);
-        res = await fetch(`/api/aulas/cursos/${cursoId}/aulas/${aula.id}/gerar`, { method: "POST" });
+        res = await apiFetch(`/api/aulas/cursos/${cursoId}/aulas/${aula.id}/gerar`, { method: "POST" });
         setGerando(false);
         if (res.status === 402) {
           setModalLimite(true);
@@ -178,7 +179,7 @@ export default function AulasCursoPage() {
           return;
         }
       } else {
-        res = await fetch(`/api/aulas/cursos/${cursoId}/aulas/${aula.id}`);
+        res = await apiFetch(`/api/aulas/cursos/${cursoId}/aulas/${aula.id}`);
       }
       const data = await res.json();
       const aulaRetornada = data.aula ?? null;
@@ -197,7 +198,7 @@ export default function AulasCursoPage() {
   // Marcar como concluída (agenda revisão espaçada) ou desfazer
   async function toggleStatus(aulaId: number, statusAtual: string) {
     const novoStatus = statusAtual === "concluida" ? "gerada" : "concluida";
-    await fetch(`/api/aulas/cursos/${cursoId}/aulas/${aulaId}/status`, {
+    await apiFetch(`/api/aulas/cursos/${cursoId}/aulas/${aulaId}/status`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: novoStatus }),
@@ -224,7 +225,7 @@ export default function AulasCursoPage() {
     const fd = new FormData();
     for (const f of uploadFiles) fd.append("apostilas", f);
     try {
-      const res = await fetch(`/api/aulas/cursos/${cursoId}/apostilas`, { method: "POST", body: fd });
+      const res = await apiFetch(`/api/aulas/cursos/${cursoId}/apostilas`, { method: "POST", body: fd });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Erro no upload");
       setUploadStatus("ok");

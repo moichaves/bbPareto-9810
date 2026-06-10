@@ -5,6 +5,7 @@ import {
   BookOpen, ChevronRight, Zap, RefreshCw
 } from "lucide-react";
 import QuizRevisao from "../components/quiz-revisao";
+import { apiFetch } from "../lib/api";
 
 type Revisao = {
   id: number;
@@ -51,8 +52,8 @@ export default function RevisoesPage() {
     setLoading(true);
     try {
       const [rHoje, rProx] = await Promise.all([
-        fetch("/api/revisoes/hoje").then(r => r.json()),
-        fetch("/api/revisoes/proximas").then(r => r.json()),
+        apiFetch("/api/revisoes/hoje").then(r => r.json()),
+        apiFetch("/api/revisoes/proximas").then(r => r.json()),
       ]);
       setHoje(rHoje.revisoes ?? []);
       // proximas = todas pendentes, excluir as que já estão em hoje
@@ -67,7 +68,7 @@ export default function RevisoesPage() {
 
   async function concluir(id: number) {
     setConcluindo(id);
-    await fetch(`/api/revisoes/${id}/concluir`, { method: "PATCH" });
+    await apiFetch(`/api/revisoes/${id}/concluir`, { method: "PATCH" });
     setConcluindo(null);
     await carregar();
   }

@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import {
+import { apiFetch } from "../lib/api";
   Crown, Check, Zap, BookOpen, Brain, BarChart2,
   RefreshCw, Loader2, AlertCircle, Lock, CreditCard, X
 } from "lucide-react";
@@ -57,7 +58,7 @@ export default function PlanosPage() {
   const [cancelado, setCancelado] = useState(false);
 
   useEffect(() => {
-    fetch("/api/assinatura/status")
+    apiFetch("/api/assinatura/status")
       .then(r => r.json())
       .then(d => { setStatus(d); setLoadingStatus(false); })
       .catch(() => setLoadingStatus(false));
@@ -68,7 +69,7 @@ export default function PlanosPage() {
   async function cancelarAssinatura() {
     setCancelando(true);
     try {
-      const r = await fetch("/api/assinatura/cancelar", { method: "POST" });
+      const r = await apiFetch("/api/assinatura/cancelar", { method: "POST" });
       if (r.ok) {
         setCancelado(true);
         setStatus(s => s ? { ...s, status: "cancelada" } : s);
@@ -314,7 +315,7 @@ function ModalCheckout({
     setLoading(true);
     try {
       const [mes, ano] = validade.split("/");
-      const r = await fetch("/api/assinatura/checkout", {
+      const r = await apiFetch("/api/assinatura/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

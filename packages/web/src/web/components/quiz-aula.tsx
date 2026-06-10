@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+import { apiFetch } from "../lib/api";
   X, CheckCircle2, XCircle, ChevronRight, ChevronLeft,
   RotateCcw, Trophy, Loader2, BookOpen, AlertCircle
 } from "lucide-react";
@@ -67,7 +68,7 @@ export function QuizAula({ aulaId, cursoId, assunto, onFechar }: Props) {
     setFase("carregando");
     setErro(null);
     try {
-      const res = await fetch(`/api/aulas/cursos/${cursoId}/aulas/${aulaId}/questoes`, {
+      const res = await apiFetch(`/api/aulas/cursos/${cursoId}/aulas/${aulaId}/questoes`, {
         method: "POST",
       });
       if (!res.ok) {
@@ -108,7 +109,7 @@ export function QuizAula({ aulaId, cursoId, assunto, onFechar }: Props) {
     const acertos = questoes.filter((q, i) => respostas[i] === q.gabarito).length;
     setSalvando(true);
     try {
-      await fetch(`/api/aulas/cursos/${cursoId}/aulas/${aulaId}/questoes/tentativa`, {
+      await apiFetch(`/api/aulas/cursos/${cursoId}/aulas/${aulaId}/questoes/tentativa`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ acertos, total: questoes.length, respostas }),

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { BookOpen, Plus, Trash2, ChevronRight, Loader2, AlertCircle } from "lucide-react";
+import { apiFetch } from "../lib/api";
 
 type Curso = {
   id: number;
@@ -20,7 +21,7 @@ export default function AulasPage() {
 
   async function load() {
     try {
-      const res = await fetch("/api/aulas/cursos");
+      const res = await apiFetch("/api/aulas/cursos");
       const data = await res.json();
       setCursos(data.cursos ?? []);
     } catch {
@@ -34,7 +35,7 @@ export default function AulasPage() {
     setCriando(true);
     try {
       // Buscar análise mais recente concluída
-      const res = await fetch("/api/analises");
+      const res = await apiFetch("/api/analises");
       const data = await res.json();
       const analises: Array<{ id: number; titulo: string; cargo: string; status: string }> = data.analises ?? [];
       const analise = analises.find((a) => a.status === "concluido") ?? analises[0];
@@ -49,7 +50,7 @@ export default function AulasPage() {
       form.append("cargo", analise.cargo);
       form.append("analiseId", String(analise.id));
 
-      const r = await fetch("/api/aulas/cursos", { method: "POST", body: form });
+      const r = await apiFetch("/api/aulas/cursos", { method: "POST", body: form });
       const d = await r.json();
       if (d.cursoId) navigate(`/aulas/${d.cursoId}`);
     } catch (e) {
@@ -63,7 +64,7 @@ export default function AulasPage() {
     if (!confirm("Deletar este curso e todas as aulas?")) return;
     setDeletingId(id);
     try {
-      await fetch(`/api/aulas/cursos/${id}`, { method: "DELETE" });
+      await apiFetch(`/api/aulas/cursos/${id}`, { method: "DELETE" });
       setCursos((prev) => prev.filter((c) => c.id !== id));
     } finally {
       setDeletingId(null);

@@ -1,6 +1,7 @@
 import { useState, useRef, useMemo } from "react";
 import { useLocation } from "wouter";
 import { Upload, FileText, X, Loader2, AlertCircle, ChevronRight, Calendar, SlidersHorizontal, Clock, Zap, BookOpen, Flame } from "lucide-react";
+import { apiFetch } from "../lib/api";
 
 export default function NovaAnalise() {
   const [, setLocation] = useLocation();
@@ -75,7 +76,11 @@ export default function NovaAnalise() {
     if (edital) formData.append("edital", edital);
     provas.forEach((p) => formData.append("provas", p));
     try {
-      const res = await fetch("/api/analises/processar", { method: "POST", body: formData });
+      const res = await apiFetch("/api/analises/processar", {
+        method: "POST",
+        body: formData,
+
+      });
       let data: any = {};
       try { data = await res.json(); } catch {}
       if (!res.ok) throw new Error(data.error || `Erro ${res.status} ao processar`);

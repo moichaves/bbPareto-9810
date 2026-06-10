@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { History, ChevronRight, Trash2, Calendar, TrendingUp, Plus } from "lucide-react";
+import { apiFetch } from "../lib/api";
 
 type Analise = {
   id: number;
@@ -17,14 +18,14 @@ export default function HistoricoPage() {
   const { data, isLoading } = useQuery<{ analises: Analise[] }>({
     queryKey: ["analises"],
     queryFn: async () => {
-      const res = await fetch("/api/analises");
+      const res = await apiFetch("/api/analises");
       return res.json();
     },
   });
 
   const deletar = useMutation({
     mutationFn: async (id: number) => {
-      await fetch(`/api/analises/${id}`, { method: "DELETE" });
+      await apiFetch(`/api/analises/${id}`, { method: "DELETE" });
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["analises"] }),
   });

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import {
+import { apiFetch } from "../lib/api";
   X, Loader2, CheckCircle2, XCircle, ChevronRight,
   Trophy, RotateCcw, AlertCircle
 } from "lucide-react";
@@ -62,7 +63,7 @@ export default function QuizRevisao({ revisaoId, assunto, tipo, onConcluir, onFe
     setLoading(true);
     setErro("");
     try {
-      const r = await fetch(`/api/revisoes/${revisaoId}/questoes`);
+      const r = await apiFetch(`/api/revisoes/${revisaoId}/questoes`);
       const data = await r.json();
       if (!r.ok) throw new Error(data.error ?? "Erro ao carregar");
       setQuestoes(data.questoes ?? []);
@@ -90,7 +91,7 @@ export default function QuizRevisao({ revisaoId, assunto, tipo, onConcluir, onFe
 
   async function concluirRevisao() {
     setConcluindo(true);
-    await fetch(`/api/revisoes/${revisaoId}/concluir`, { method: "PATCH" });
+    await apiFetch(`/api/revisoes/${revisaoId}/concluir`, { method: "PATCH" });
     setConcluindo(false);
     onConcluir();
   }
